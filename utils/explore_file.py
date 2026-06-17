@@ -20,7 +20,7 @@ def explorer_hdf5(file_name, max_items=20) :
 
             elif isinstance(obj, h5py.Dataset) :
                 print(f"{indent} Dataset : /{name} shape = {obj.shape}, dtype = {obj.dtype}")
-                data = obj[()].flatten()
+                data = obj[:max_items].flatten()
                 print(f"{indent} Aperçu : {data[:max_items]}{'...' if data.size > max_items else ''}")
             
             if obj.attrs : 
