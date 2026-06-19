@@ -2,7 +2,7 @@
 
 import torch
 import time
-from torch.utils.data import Dataloader
+from torch.utils.data import DataLoader
 from dataset import FluidDataset
 
 def diagnostics(file_path, dataset_name) : 

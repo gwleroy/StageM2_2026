@@ -5,7 +5,7 @@ from torch.utils.data import Dataset, random_split
 
 class FluidDataset(Dataset) : 
 
-    def __init__(self, file_path, dataset_name, split = "train", train_ratio = 0.8, seed = 42) : 
+    def __init__(self, file_path, dataset_name, split = "train", train_ratio = (0.8, 0.1, 0.1), seed = 42) : 
         self.file_path = file_path
         self.dataset_name = dataset_name
 
@@ -22,12 +22,16 @@ class FluidDataset(Dataset) :
             indices = np.arange(total_len)
             rng.shuffle(indices)
 
-            train_size = int(train_ratio * total_len)
+            train_size = int(train_ratio[0] * total_len)
+            val_size = int(train_ratio[1] * total_len)
+
 
             if split == 'train':
                 self.indices = np.sort(indices[:train_size])
-            else:
-                self.indices = np.sort(indices[train_size:])
+            elif split == 'val':
+                self.indices = np.sort(indices[train_size:train_size + val_size])
+            else: # test
+                self.indices = np.sort(indices[train_size + val_size:])
 
     def __len__(self) :
         return len(self.indices)

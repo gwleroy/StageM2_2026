@@ -10,7 +10,7 @@ class Beta_VAE(nn.Module) :
 
         # Encodeur
         self.encoder_conv = nn.Sequential(
-                nn.Conv2d(in_channels=2, out_channels=4, kernel_size=3, stride=2, padding=1),
+                nn.Conv2d(in_channels=input_shape[0], out_channels=4, kernel_size=3, stride=2, padding=1),
                 nn.ELU(), # on peut également mettre nn.RELU, c'est ici que l'on choisi la fonction d'activation
 
                 nn.Conv2d(4, 8, kernel_size=3, stride=2, padding=1),
@@ -43,28 +43,21 @@ class Beta_VAE(nn.Module) :
         self.decoder = nn.Sequential(
                 nn.Unflatten(1, self.pre_flatten_shape),
                 nn.ConvTranspose2d(in_channels=128, out_channels=64, kernel_size=3, stride=2, padding=1, output_padding=1),
-                nn.ConstantPad2d((0, 0, 0, -1), 0),
                 nn.ELU(),
 
                 nn.ConvTranspose2d(in_channels=64, out_channels=32, kernel_size=3, stride=2, padding=1, output_padding=1),
-                nn.ConstantPad2d((0, 0, 0, -1), 0),
                 nn.ELU(),
 
                 nn.ConvTranspose2d(in_channels=32, out_channels=16, kernel_size=3, stride=2, padding=1, output_padding=1),
-                nn.ConstantPad2d((0, -1, 0, 0), 0),
                 nn.ELU(),
 
                 nn.ConvTranspose2d(in_channels=16, out_channels=8, kernel_size=3, stride=2, padding=1, output_padding=1),
-                nn.ConstantPad2d((0, -1, 0, 0), 0),
                 nn.ELU(),
 
                 nn.ConvTranspose2d(in_channels=8, out_channels=4, kernel_size=3, stride=2, padding=1, output_padding=1),
-                nn.ConstantPad2d((0, -1, 0, 0), 0),
                 nn.ELU(),
 
                 nn.ConvTranspose2d(in_channels=4, out_channels=2, kernel_size=3, stride=2, padding=1, output_padding=1),
-                nn.ConstantPad2d((0, -1, 0, 0), 0),
-                nn.ELU(),
 
         )
 
@@ -94,7 +87,7 @@ class Beta_VAE(nn.Module) :
 
         recon = F.interpolate(recon, size=original_size, mode='bilinear', align_corners=False)
 
-        return recon[:, :, :x.size(2), :x.size(3)], mu, logvar
+        return recon, mu, logvar
 
     def reparametrization(self, mu, logvar) :
         std = torch.exp(0.5 * logvar)
