@@ -5,7 +5,7 @@ from torch.utils.data import Dataset, random_split
 
 class FluidDataset(Dataset) : 
 
-    def __init__(self, file_path, dataset_name, split = "train", train_ratio = (0.8, 0.1, 0.1), seed = 42) : 
+    def __init__(self, file_path, dataset_name, split = "train", train_ratio = (0.8, 0.1, 0.1), mode = "stride", seed = 42) : 
         self.file_path = file_path
         self.dataset_name = dataset_name
 
@@ -17,22 +17,39 @@ class FluidDataset(Dataset) :
                 self.std = f['std'][()]
             else:
                 self.mean, self.std = self._compute_stats(f)
+            
+            if mode == "random" :
+                # Separate the dataset randomly for the snapshot 
+                rng = np.random.default_rng(seed)
+                indices = np.arange(total_len)
+                rng.shuffle(indices)
 
-            rng = np.random.default_rng(seed)
-            indices = np.arange(total_len)
-            rng.shuffle(indices)
-
-            train_size = int(train_ratio[0] * total_len)
-            val_size = int(train_ratio[1] * total_len)
+                train_size = int(train_ratio[0] * total_len)
+                val_size = int(train_ratio[1] * total_len)
 
 
-            if split == 'train':
-                self.indices = np.sort(indices[:train_size])
-            elif split == 'val':
-                self.indices = np.sort(indices[train_size:train_size + val_size])
-            else: # test
-                self.indices = np.sort(indices[train_size + val_size:])
+                if split == 'train':
+                    self.indices = np.sort(indices[:train_size])
+                elif split == 'val':
+                    self.indices = np.sort(indices[train_size:train_size + val_size])
+                else: # test
+                    self.indices = np.sort(indices[train_size + val_size:])
+            
 
+            # separate the dataset in a stride manner on the snapshot
+            elif mode == "stride" :
+                all_indices = np.arange(total_len)
+                cycles = np.array([0, 1, 2])
+                repeats = (total_len // 3)+ 1
+                split_assignment = np.tile(cycles, repeats)[:total_len]
+
+                if split == 'train':
+                    self.indices = all_indices[split_assignment == 0]
+                elif split == 'test':
+                    self.indices = all_indices[split_assignment == 1]
+                elif split == 'val':
+                    self.indices = all_indices[split_assignment == 2]
+    
     def __len__(self) :
         return len(self.indices)
     
